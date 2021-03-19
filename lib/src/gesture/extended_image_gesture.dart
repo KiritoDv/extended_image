@@ -76,17 +76,25 @@ class ExtendedImageGestureState extends State<ExtendedImageGesture>
     );
 
     _gestureAnimation = GestureAnimation(this, offsetCallBack: (Offset value) {
-      gestureDetails = GestureDetails(
-          offset: value,
-          totalScale: _gestureDetails.totalScale,
-          gestureDetails: _gestureDetails);
+      if (mounted) {
+        setState(() {
+          _gestureDetails = GestureDetails(
+              offset: value,
+              totalScale: _gestureDetails.totalScale,
+              gestureDetails: _gestureDetails);
+        });
+      }
     }, scaleCallBack: (double scale) {
-      gestureDetails = GestureDetails(
-          offset: _gestureDetails.offset,
-          totalScale: scale,
-          gestureDetails: _gestureDetails,
-          actionType: ActionType.zoom,
-          userOffset: false);
+      if (mounted) {
+        setState(() {
+          _gestureDetails = GestureDetails(
+              offset: _gestureDetails.offset,
+              totalScale: scale,
+              gestureDetails: _gestureDetails,
+              actionType: ActionType.zoom,
+              userOffset: false);
+        });
+      }
     });
   }
 
@@ -215,19 +223,21 @@ class ExtendedImageGestureState extends State<ExtendedImageGesture>
       return;
     }
 
-    final Offset offset = (details.scale == 1.0
-            ? details.focalPoint * _gestureConfig.speed
-            : _startingOffset) -
-        _normalizedOffset * scale;
+    final Offset offset =
+        (details.scale == 1.0 ? details.focalPoint : _startingOffset) -
+            _normalizedOffset * scale;
 
     if (mounted &&
         (offset != _gestureDetails.offset ||
             scale != _gestureDetails.totalScale)) {
-      gestureDetails = GestureDetails(
-          offset: offset,
-          totalScale: scale,
-          gestureDetails: _gestureDetails,
-          actionType: details.scale != 1.0 ? ActionType.zoom : ActionType.pan);
+      setState(() {
+        _gestureDetails = GestureDetails(
+            offset: offset,
+            totalScale: scale,
+            gestureDetails: _gestureDetails,
+            actionType:
+                details.scale != 1.0 ? ActionType.zoom : ActionType.pan);
+      });
     }
   }
 
@@ -289,10 +299,12 @@ class ExtendedImageGestureState extends State<ExtendedImageGesture>
       return;
     }
 
-    gestureDetails = GestureDetails(
-      offset: Offset.zero,
-      totalScale: _gestureConfig.initialScale,
-    );
+    setState(() {
+      _gestureDetails = GestureDetails(
+        offset: Offset.zero,
+        totalScale: _gestureConfig.initialScale,
+      );
+    });
   }
 
   void _handlePointerDown(PointerDownEvent pointerDownEvent) {
@@ -353,14 +365,11 @@ class ExtendedImageGestureState extends State<ExtendedImageGesture>
       onScaleEnd: _handleScaleEnd,
       onDoubleTap: _handleDoubleTap,
       child: image,
-      behavior: _gestureConfig?.hitTestBehavior,
     );
 
     image = Listener(
       child: image,
       onPointerDown: _handlePointerDown,
-      onPointerSignal: _handlePointerSignal,
-      behavior: _gestureConfig?.hitTestBehavior,
     );
 
     return image;
@@ -371,7 +380,6 @@ class ExtendedImageGestureState extends State<ExtendedImageGesture>
     if (mounted) {
       setState(() {
         _gestureDetails = value;
-        _gestureConfig?.gestureDetailsIsChanged?.call(_gestureDetails);
       });
     }
   }
@@ -401,27 +409,18 @@ class ExtendedImageGestureState extends State<ExtendedImageGesture>
   }
 
   void reset() {
-    _gestureConfig = widget
-            .extendedImageState.imageWidget.initGestureConfigHandler
-            ?.call(widget.extendedImageState) ??
-        GestureConfig();
+    if (mounted) {
+      setState(() {
+        _gestureConfig = widget
+                .extendedImageState.imageWidget.initGestureConfigHandler
+                ?.call(widget.extendedImageState) ??
+            GestureConfig();
 
-    gestureDetails = GestureDetails(
-      totalScale: _gestureConfig.initialScale,
-      offset: Offset.zero,
-    )..initialAlignment = _gestureConfig.initialAlignment;
-  }
-
-  void _handlePointerSignal(PointerSignalEvent event) {
-    if (event is PointerScrollEvent && event.kind == PointerDeviceKind.mouse) {
-      _handleScaleStart(ScaleStartDetails(focalPoint: event.position));
-      final double dy = event.scrollDelta.dy;
-      final double dx = event.scrollDelta.dx;
-      _handleScaleUpdate(ScaleUpdateDetails(
-          focalPoint: event.position,
-          scale: 1.0 +
-              (dy.abs() > dx.abs() ? dy : dx) * _gestureConfig.speed / 1000.0));
-      _handleScaleEnd(ScaleEndDetails());
+        _gestureDetails = GestureDetails(
+          totalScale: _gestureConfig.initialScale,
+          offset: Offset.zero,
+        )..initialAlignment = _gestureConfig.initialAlignment;
+      });
     }
   }
 }

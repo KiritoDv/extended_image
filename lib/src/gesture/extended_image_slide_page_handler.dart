@@ -1,4 +1,3 @@
-import 'package:extended_image/src/extended_image_typedef.dart';
 import 'package:flutter/material.dart';
 import '../extended_image_utils.dart';
 import 'extended_image_gesture_utils.dart';
@@ -10,16 +9,9 @@ import 'extended_image_slide_page.dart';
 
 /// for loading/failed widget
 class ExtendedImageSlidePageHandler extends StatefulWidget {
-  const ExtendedImageSlidePageHandler({
-    @required this.child,
-    this.extendedImageSlidePageState,
-    this.heroBuilderForSlidingPage,
-  });
+  const ExtendedImageSlidePageHandler(this.child, this.extendedImageSlidePageState);
   final Widget child;
   final ExtendedImageSlidePageState extendedImageSlidePageState;
-
-  ///build Hero only for sliding page
-  final HeroBuilderForSlidingPage heroBuilderForSlidingPage;
   @override
   ExtendedImageSlidePageHandlerState createState() =>
       ExtendedImageSlidePageHandlerState();
@@ -28,21 +20,6 @@ class ExtendedImageSlidePageHandler extends StatefulWidget {
 class ExtendedImageSlidePageHandlerState
     extends State<ExtendedImageSlidePageHandler> {
   Offset _startingOffset;
-  ExtendedImageSlidePageState _extendedImageSlidePageState;
-  @override
-  void didChangeDependencies() {
-    _extendedImageSlidePageState = widget.extendedImageSlidePageState ??
-        context.findAncestorStateOfType<ExtendedImageSlidePageState>();
-    super.didChangeDependencies();
-  }
-
-  @override
-  void didUpdateWidget(covariant ExtendedImageSlidePageHandler oldWidget) {
-    _extendedImageSlidePageState = widget.extendedImageSlidePageState ??
-        context.findAncestorStateOfType<ExtendedImageSlidePageState>();
-    super.didUpdateWidget(oldWidget);
-  }
-
   @override
   Widget build(BuildContext context) {
     Widget result = GestureDetector(
@@ -52,15 +29,15 @@ class ExtendedImageSlidePageHandlerState
       child: widget.child,
       behavior: HitTestBehavior.translucent,
     );
-    if (_extendedImageSlidePageState != null) {
-      result = widget.heroBuilderForSlidingPage?.call(result) ?? result;
-    }
-    if (_extendedImageSlidePageState != null &&
-        _extendedImageSlidePageState.widget.slideType == SlideType.onlyImage) {
+
+    if (widget.extendedImageSlidePageState != null &&
+        widget.extendedImageSlidePageState.widget.slideType ==
+            SlideType.onlyImage) {
+      final ExtendedImageSlidePageState extendedImageSlidePageState = widget.extendedImageSlidePageState;
       result = Transform.translate(
-        offset: _extendedImageSlidePageState.offset,
+        offset: extendedImageSlidePageState.offset,
         child: Transform.scale(
-          scale: _extendedImageSlidePageState.scale,
+          scale: extendedImageSlidePageState.scale,
           child: result,
         ),
       );
@@ -75,14 +52,14 @@ class ExtendedImageSlidePageHandlerState
   Offset _updateSlidePagePreOffset;
   void _handleScaleUpdate(ScaleUpdateDetails details) {
     ///whether gesture page
-    if (_extendedImageSlidePageState != null && details.scale == 1.0) {
+    if (widget.extendedImageSlidePageState != null && details.scale == 1.0) {
       //var offsetDelta = (details.focalPoint - _startingOffset);
 
       final double delta = (details.focalPoint - _startingOffset).distance;
 
       if (doubleCompare(delta, minGesturePageDelta) > 0) {
         _updateSlidePagePreOffset ??= details.focalPoint;
-        _extendedImageSlidePageState.slide(
+        widget.extendedImageSlidePageState.slide(
             details.focalPoint - _updateSlidePagePreOffset,
             extendedImageSlidePageHandlerState: this);
         _updateSlidePagePreOffset = details.focalPoint;
@@ -91,10 +68,10 @@ class ExtendedImageSlidePageHandlerState
   }
 
   void _handleScaleEnd(ScaleEndDetails details) {
-    if (_extendedImageSlidePageState != null &&
-        _extendedImageSlidePageState.isSliding) {
+    if (widget.extendedImageSlidePageState != null &&
+        widget.extendedImageSlidePageState.isSliding) {
       _updateSlidePagePreOffset = null;
-      _extendedImageSlidePageState.endSlide(details);
+      widget.extendedImageSlidePageState.endSlide(details);
       return;
     }
   }

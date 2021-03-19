@@ -69,8 +69,7 @@ class ExtendedImageBorderPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) {
-    final ExtendedImageBorderPainter old =
-        oldDelegate as ExtendedImageBorderPainter;
+    final ExtendedImageBorderPainter old = oldDelegate as ExtendedImageBorderPainter;
 
     return borderRadius != old.borderRadius ||
         border != old.border ||
